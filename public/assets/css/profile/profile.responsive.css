@@ -1,0 +1,108 @@
+@media (max-width: 1300px) {
+    .informations section.main .container .item {
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+    .userDetails{
+        position: initial;
+    }
+    .nav.nav-tabs{
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .main{
+        padding: 0!important;
+    }
+    .informations section.main .container ul {
+        width: max-content;
+    }
+
+}
+
+@media (min-width: 368px) and (max-width: 1300px) {
+    .main {
+            padding: 30px !important;
+        }
+}
+
+@media (min-width: 573px) and (max-width: 1300px) {
+    .informations .infoBox {
+        width: 450px;
+        margin: auto;
+    }
+    .main .container{
+        width: 450px;
+    }
+    .content .infoBox{
+        width: 100%;
+    }
+
+    #staticBackdrop8 .modal-content {
+        width: 400px !important;
+        margin: auto;
+    }
+}
+
+@media (min-width: 765px) and (max-width: 1300px) {
+    .informations section.main .container .item {
+            overflow-x: visible;
+            overflow-y: visible;
+        }
+        .content .infoBox {
+            width: 350px;
+        }
+    .informations section.main {
+            width: 100% !important;
+        }
+    
+        .informations section.main .container .content h3 {
+            font-size: 21px;
+        }
+    
+        .main .container {
+            width: 100% !important;
+        }
+    
+        .informations section.main .container ul {
+            width: 100%;
+        }
+        #staticBackdrop8 .modal-content {
+            width: 650px !important;
+            margin: auto;
+        }
+}
+
+@media (min-width: 990px) and (max-width: 1300px) {
+    .content .infoBox {
+            width: 100%;
+        }
+}
+
+@media (min-width: 1178px) and (max-width: 1300px) {
+    .informations aside {
+            width: 450px !important;
+        }
+                                #staticBackdrop8 .modal-content {
+                                    width: 650px !important;
+                                    margin: auto;
+                                }
+}
+
+@media (min-width: 1300px) and (max-width: 1400px) {
+    .informations aside {
+        width: 450px !important;
+    }
+    .informations section.main .container .content h3 {
+        font-size: 23px;
+    }
+}
+
+@media (min-width: 1400px) and (max-width: 1600px) {
+    .userDetails {
+        position: sticky!important;
+        top: 0;
+    }
+    .informations section.main .container .content h3 {
+        font-size: 18px;
+    }
+}

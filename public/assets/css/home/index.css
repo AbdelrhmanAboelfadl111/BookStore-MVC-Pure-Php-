@@ -1,0 +1,19 @@
+header #carouselExampleDark .carousel-indicators button{
+    background-color: silver;
+}
+header #carouselExampleDark .carousel-indicators button.active{
+    background-color: blue;
+}
+header #carouselExampleDark .carousel-inner .carousel-item .row .column{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+header #carouselExampleDark .carousel-inner .carousel-item .row .column img{
+    width: 550px;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+}
+header #carouselExampleDark .carousel-inner .carousel-item:nth-of-type(2) .row .column img {
+    width: 650px;
+
+}

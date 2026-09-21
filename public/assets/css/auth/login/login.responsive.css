@@ -1,0 +1,24 @@
+@media (max-width: 1300px) {
+    section img.bgImg {
+        display: none;
+    }
+}
+
+@media (min-width: 368px) and (max-width: 1300px) {}
+
+@media (min-width: 573px) and (max-width: 1300px) {}
+
+@media (min-width: 765px) and (max-width: 1300px) {
+    section img.bgImg {
+        display: initial;
+        width: 400px;
+    }
+}
+
+@media (min-width: 990px) and (max-width: 1300px) {}
+
+@media (min-width: 1178px) and (max-width: 1300px) {}
+
+@media (min-width: 1300px) and (max-width: 1400px) {}
+
+@media (min-width: 1400px) and (max-width: 1600px) {}

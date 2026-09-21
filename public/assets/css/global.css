@@ -1,0 +1,18 @@
+h1,h2,h3,h4,h5,h6,p,span,a,button{
+    font-family: 'Roboto';
+}
+nav.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10000;
+}
+nav.navbar .container{
+    background-color: white!important;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+}
+
+nav .navbar-brand {
+    width: 60px;
+}

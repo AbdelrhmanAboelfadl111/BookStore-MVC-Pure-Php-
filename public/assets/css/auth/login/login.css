@@ -1,0 +1,19 @@
+
+section img.bgImg{
+    width: 600px;
+
+}
+section .container .column .box{
+    width: 400px;
+    min-height: 350px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+}
+section .container .title h2{
+    border-bottom: 2px solid black;
+    padding-bottom:  20px;
+}
