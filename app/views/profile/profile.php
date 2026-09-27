@@ -159,11 +159,13 @@
                                     </ul>
                                 </li>
 
+                                <li class="nav-item me-2" role="presentation">
+                                    <button class="nav-link" id="Books-tab" data-bs-toggle="tab" data-bs-target="#Books-tab-pane" type="button" role="tab" aria-controls="Books-tab-pane" aria-selected="false">Books</button>
+                                </li>
+
                                 <?php if (isAuth('customer')): ?>
 
-                                    <li class="nav-item me-2" role="presentation">
-                                        <button class="nav-link" id="Books-tab" data-bs-toggle="tab" data-bs-target="#Books-tab-pane" type="button" role="tab" aria-controls="Books-tab-pane" aria-selected="false">Books</button>
-                                    </li>
+
 
                                     <li data-bs-toggle="modal" data-bs-target="#staticBackdrop8" onclick="getItemsIntoCart();" class="nav-item cart ms-auto d-flex justify-content-center align-items-center" role="presentation">
                                         <button type="button" class="btn btn-primary">
@@ -315,6 +317,9 @@
 
 
 
+    <script>
+        window.currentUserRole = <?= json_encode(auth('role')) ?>;
+    </script>
     <script src="<?php echo asset("js/bootstrap.js"); ?>"></script>
     <script src="<?php echo asset("js/jQuery.js"); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

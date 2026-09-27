@@ -72,12 +72,12 @@ class CartModel extends Model
         }
 
         $totalItems = $DB->query(
-            "SELECT SUM(quantity)
+            "SELECT COUNT(*)
         FROM orders_items
         WHERE order_id = {$orderId}"
         )->fetchColumn();
 
-        return $totalItems ?? 0;
+        return (int) ($totalItems ?? 0);
     }
 
 
@@ -100,7 +100,25 @@ class CartModel extends Model
 
 
         $bookId = Request::DataSpecific('bookId');
-        $quantity = Request::DataSpecific('quantityBooks');
+        $quantity = (int) Request::DataSpecific('quantityBooks');
+
+        $bookStock = (int) $DB->query(
+            "SELECT stock FROM books WHERE id = {$bookId} LIMIT 1"
+        )->fetchColumn();
+
+        $existingInCart = (int) $DB->query(
+            "SELECT COALESCE(SUM(quantity), 0)
+            FROM orders_items
+            WHERE order_id = {$pendingOrderId} AND book_id = {$bookId}"
+        )->fetchColumn();
+
+        $remainingStock = $bookStock - $existingInCart;
+
+        if ($quantity <= 0 || $quantity > $remainingStock) {
+            Response::json_response([
+                'quantityBooks' => ["Only {$remainingStock} item(s) available in stock."]
+            ], '', 422);
+        }
 
         $orderItemId = self::getOrderItemId(
             $pendingOrderId,
@@ -353,14 +371,15 @@ class CartModel extends Model
         ];
     }
 
-    public static function deleteOrderItem(){
+    public static function deleteOrderItem()
+    {
         $DB = Database::getConnection();
         $stmt = $DB->prepare(" DELETE
             FROM orders_items
             WHERE id = :orderItemId;");
 
         $stmt->execute([
-            'orderItemId' =>Request::DataSpecific('orderItemId')
+            'orderItemId' => Request::DataSpecific('orderItemId')
         ]);
 
         $orderId = self::getPendingOrderId();
@@ -371,20 +390,74 @@ class CartModel extends Model
             'orderId' => $orderId,
             'totalPrice' => $totalPrice
         ];
-
     }
 
     public static function fireOrder()
     {
         $DB = Database::getConnection();
-        $stmt = $DB->prepare(" UPDATE orders SET status = 'ordered'
-            WHERE id = :orderId;");
+        $orderId = (int) Request::DataSpecific('orderId');
+        $customerId = (int) auth('id');
 
-        $stmt->execute([
-            'orderId' => Request::DataSpecific('orderId')
-        ]);
+        $DB->beginTransaction();
 
-        
+        try {
+            $stmt = $DB->prepare(
+                "SELECT orders_items.book_id, orders_items.quantity, books.stock
+                FROM orders_items
+                INNER JOIN orders
+                    ON orders.id = orders_items.order_id
+                INNER JOIN books
+                    ON books.id = orders_items.book_id
+                WHERE orders_items.order_id = :orderId
+                    AND orders.customer_id = :customerId
+                    AND orders.status = 'pending'
+                FOR UPDATE"
+            );
+
+            $stmt->execute([
+                'orderId' => $orderId,
+                'customerId' => $customerId
+            ]);
+
+            $items = $stmt->fetchAll();
+
+            if (empty($items)) {
+                $DB->rollBack();
+                Response::json_response([], 'The cart is empty or the order is no longer available.', 422);
+            }
+
+            foreach ($items as $item) {
+                if ((int) $item['quantity'] > (int) $item['stock']) {
+                    $DB->rollBack();
+                    Response::json_response([
+                        'quantityBooks' => [
+                            "Only {$item['stock']} item(s) available in stock."
+                        ]
+                    ], 'Not enough stock.', 422);
+                }
+            }
+
+            $stmt = $DB->prepare(
+                "UPDATE orders
+                SET status = 'ordered'
+                WHERE id = :orderId
+                    AND customer_id = :customerId
+                    AND status = 'pending'"
+            );
+
+            $stmt->execute([
+                'orderId' => $orderId,
+                'customerId' => $customerId
+            ]);
+
+            $DB->commit();
+        } catch (Throwable $exception) {
+            if ($DB->inTransaction()) {
+                $DB->rollBack();
+            }
+
+            Response::json_response([], 'Unable to place the order.', 500);
+        }
     }
 
     public static function getOrderedOrders()
@@ -485,5 +558,4 @@ class CartModel extends Model
             ]
         ];
     }
-
 }

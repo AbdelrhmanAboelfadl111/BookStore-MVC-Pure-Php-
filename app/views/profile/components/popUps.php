@@ -353,7 +353,7 @@
                         </textarea>
 
                         <div class="errorCon">
-                            
+
                         </div>
 
                         <!-- <p class="alert alert-danger w-100 my-2">Reason is required</p> -->
@@ -368,7 +368,7 @@
                         </button>
 
                     </div>
-
+                </form>
             </div>
 
 

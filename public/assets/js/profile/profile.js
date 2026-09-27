@@ -139,6 +139,16 @@ function showErrors(errors) {
   }
 }
 
+function normalizeFilterValue(value) {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function canAddToCart() {
+  return window.currentUserRole === "customer";
+}
+
 $(document).on("click", "#filterBooksButton", function (e) {
   e.preventDefault();
   $("#filterBook").trigger("submit");
@@ -146,6 +156,14 @@ $(document).on("click", "#filterBooksButton", function (e) {
 
 $("#filterBook").on("submit", function (e) {
   e.preventDefault();
+
+  $(this)
+    .find("input, select")
+    .each(function () {
+      let field = $(this);
+      field.val(normalizeFilterValue(field.val()));
+    });
+
   let dataForm = $(this).serialize();
   $.ajax({
     type: "POST",
@@ -161,9 +179,25 @@ $("#filterBook").on("submit", function (e) {
       $("#Books-tab-pane nav").remove();
       if (books.length != 0) {
         for (let i = 0; i < books.length; i++) {
+          const addToCartMarkup = canAddToCart()
+            ? `
+                <div class="input-group mb-3">
+                    <button class="btn btn-outline-success" type="button" onclick="addToCart(${books[i].id}, this)">
+                        Add To Cart
+                    </button>
+                    <input
+                        type="number"
+                        class="form-control"
+                        placeholder="Quantity"
+                        min="1"
+                        id="input-quantity-${books[i].id}">
+                </div>
+              `
+            : "";
+
           $("#books").append(`
                                 <div class='col-lg-6 column'>
-                            <div class='infoBox h-100'>
+                            <div class='infoBox h-100' data-book-id='${books[i].id}' data-stock='${books[i].stock}'>
                                 <div class='imgCon'>
                                     <img src='${imgPath(
                                       books[i].image == null
@@ -185,12 +219,14 @@ $("#filterBook").on("submit", function (e) {
                                     </div>
                                     <div class='gender mb-2'>
                                         <h3 class='lable fw-bold'>Stock :</h3>
-                                        <h3 class='info '> ${books[i]["stock"]}</h3>
+                                        <h3 class='info stock-info'> ${books[i]["stock"]}</h3>
                                     </div>
                                 </div>
+
+                                ${addToCartMarkup}
                             </div>
                         </div>
-                            
+                             
                             `);
         }
         $("#Books-tab-pane").append(preparePagination(response.data));
@@ -208,9 +244,7 @@ $("#filterBook").on("submit", function (e) {
       isError("error", "Filter request failed");
     },
   });
-})
-
-
+});
 
 function preparePagination(books) {
   if (!books.data || books.data.length === 0) {
@@ -313,10 +347,26 @@ $(document).on("click", ".pagination-link", function (e) {
 
       if (books.length !== 0) {
         for (let i = 0; i < books.length; i++) {
+          const addToCartMarkup = canAddToCart()
+            ? `
+                <div class="input-group mb-3">
+                    <button class="btn btn-outline-success" type="button" onclick="addToCart(${books[i].id}, this)">
+                        Add To Cart
+                    </button>
+                    <input
+                        type="number"
+                        class="form-control"
+                        placeholder="Quantity"
+                        min="1"
+                        id="input-quantity-${books[i].id}">
+                </div>
+              `
+            : "";
+
           $("#books").append(`
                     <div class="col-lg-6 column">
 
-                        <div class="infoBox h-100">
+                        <div class="infoBox h-100" data-book-id="${books[i].id}" data-stock="${books[i].stock}">
 
                             <div class="imgCon">
                                 <img src='${imgPath(
@@ -357,12 +407,14 @@ $(document).on("click", ".pagination-link", function (e) {
                                         Stock :
                                     </h3>
 
-                                    <h3 class="info">
+                                    <h3 class="info stock-info">
                                         ${books[i].stock}
                                     </h3>
                                 </div>
 
                             </div>
+
+                            ${addToCartMarkup}
 
                         </div>
 
@@ -417,7 +469,7 @@ $("#addBook").submit(function (e) {
       modal.hide();
       $("#books").prepend(`
                                 <div class='col-lg-6 column'>
-                            <div class='infoBox h-100'>
+                            <div class='infoBox h-100 book'>
                                 <div class='imgCon'>
                                     <img src='${imgPath(
                                       book.image == null
@@ -458,6 +510,10 @@ function banUser(userId, text, event) {
   event?.preventDefault();
   event?.stopPropagation();
 
+  let isBanAction = text === "Ban";
+  let $button = $(event?.currentTarget);
+  let $card = $button.closest(".infoBox");
+
   Swal.fire({
     title: "Are you sure?",
     text: "You won't be able to revert this!",
@@ -476,9 +532,30 @@ function banUser(userId, text, event) {
         url: "/BookStore/public/profile/banUser",
         data: dataForm,
         success: function (response) {
+          if ($card.length) {
+            let $badge = $card.find(".badge.text-bg-danger");
+            let nextText = isBanAction ? "UnBan" : "Ban";
+
+            $button
+              .text(nextText)
+              .removeClass("btn-danger btn-secondary")
+              .addClass(isBanAction ? "btn-secondary" : "btn-danger")
+              .attr("onclick", `banUser(${userId}, '${nextText}', event)`);
+
+            if (isBanAction) {
+              if (!$badge.length) {
+                $card.prepend(
+                  "<span class='badge text-bg-danger position-absolute'>Baned</span>",
+                );
+              }
+            } else {
+              $badge.remove();
+            }
+          }
+
           Swal.fire({
             icon: "success",
-            title: `${text === "Ban" ? "Banned" : "Unbanned"} successfully`,
+            title: `${isBanAction ? "Banned" : "Unbanned"} successfully`,
             showConfirmButton: false,
             timer: 900,
             timerProgressBar: true,
@@ -487,29 +564,85 @@ function banUser(userId, text, event) {
         error: function (response) {
           Swal.fire({
             icon: "error",
-            title: "Something went wrong",
+            title: "You do not have permission",
             text:
               response.status === 403
-                ? "Only administrators can ban users."
+                ? response.responseJSON?.message ||
+                  "You do not have permission to ban this user."
                 : "The user was not banned.",
           });
         },
       });
-
-      //     Swal.fire({
-      //     title: "Deleted!",
-      //     text: "Your file has been deleted.",
-      //     icon: "success",
-      // });
     }
   });
 }
+
+function setCartBadgeCount(totalItems) {
+  let count = Number(totalItems) || 0;
+  $("#countOfOrders").text(Math.max(0, count));
+}
+
+function updateBookStock(bookId, stock) {
+  let normalizedStock = Math.max(0, Number(stock) || 0);
+  let $bookCards = $(`.infoBox[data-book-id="${bookId}"]`);
+  let isOutOfStock = normalizedStock === 0;
+
+  $bookCards.attr("data-stock", normalizedStock);
+  $bookCards
+    .find(".stock-info")
+    .text(isOutOfStock ? "Out of stock" : normalizedStock)
+    .toggleClass("text-danger", isOutOfStock);
+
+  if (isOutOfStock) {
+    $bookCards
+      .find("button[onclick^='addToCart']")
+      .closest(".input-group")
+      .remove();
+  }
+}
+
+$(function () {
+  $(".infoBox[data-book-id][data-stock]").each(function () {
+    let $bookCard = $(this);
+    updateBookStock($bookCard.data("book-id"), $bookCard.data("stock"));
+  });
+});
 
 function addToCart(bookId, that) {
   let quantityInput = $(that).next(),
     quantity = Number(quantityInput.val());
 
-  if (quantity == 0) {
+  let $infoBox = $(that).closest(".infoBox");
+  let stock = Number($infoBox.data("stock"));
+
+  if (!Number.isFinite(stock) || stock <= 0) {
+    let stockText = $infoBox
+      .find(".infoCon .gender .info, .infoCon .mail .info")
+      .last()
+      .text();
+    let parsedStock = Number(String(stockText).replace(/[^0-9.-]/g, ""));
+    stock = Number.isFinite(parsedStock) ? parsedStock : 0;
+  }
+
+  if (!Number.isFinite(stock) || stock <= 0) {
+    stock = 0;
+  }
+
+  if (quantity <= 0) {
+    Swal.fire({
+      icon: "error",
+      title: "Invalid quantity",
+      text: "Please enter a valid quantity greater than 0.",
+    });
+    return;
+  }
+
+  if (quantity > stock) {
+    Swal.fire({
+      icon: "error",
+      title: "Not enough stock",
+      text: `Only ${stock} item(s) available in stock.`,
+    });
     return;
   }
 
@@ -523,15 +656,32 @@ function addToCart(bookId, that) {
     url: "profile/AddToCart",
     data: dataForm,
     success: function (response) {
+      console.log(response);
       quantityInput.val("");
 
       let totalItems = response.data.totalItems;
 
-      $("#countOfOrders").text(totalItems);
+      setCartBadgeCount(totalItems);
     },
     error: function (response) {
-      let errors = response.responseJSON.data;
-      showErrors(errors);
+      let errors = response.responseJSON?.data;
+      if (errors && errors.quantityBooks) {
+        Swal.fire({
+          icon: "error",
+          title: "Not enough stock",
+          text: errors.quantityBooks[0],
+        });
+        return;
+      }
+      if (response.responseJSON?.message) {
+        Swal.fire({
+          icon: "error",
+          title: "Not enough stock",
+          text: response.responseJSON.message,
+        });
+        return;
+      }
+      showErrors(errors || {});
     },
   });
   console.log(bookId, that);
@@ -550,8 +700,6 @@ function getItemsIntoCart(orderId = null, status = "cart") {
     data: formData,
 
     success: function (response) {
-      console.log("FULL RESPONSE:", response);
-
       let books = response.data;
 
       if (!books || books.length === 0) {
@@ -687,7 +835,7 @@ function bookComponent(book, status) {
 
   return `
         <div class='col-lg-6 column'>
-            <div class='infoBox h-100' data-book-id="${book["book_id"]}">
+        <div class='infoBox h-100' data-book-id="${book["book_id"]}" data-stock="${book["stock"]}">
 
                 <div class='imgCon'>
                     <img src='${imgPath(
@@ -799,6 +947,11 @@ function decreaseOrderItem(orderItem, btn) {
                             There is no data in the cart.
                         </div>
                     `);
+          setCartBadgeCount(0);
+        } else {
+          setCartBadgeCount(
+            $("#staticBackdrop8 .modal-body .row .infoBox").length,
+          );
         }
       } else {
         $(`.infoBox[data-book-id="${bookId}"] h4.subTotal`).text(
@@ -850,6 +1003,11 @@ function deleteOrderItem(orderItem, btn) {
                         There is no data in the cart.
                     </div>
                 `);
+        setCartBadgeCount(0);
+      } else {
+        setCartBadgeCount(
+          $("#staticBackdrop8 .modal-body .row .infoBox").length,
+        );
       }
     },
     error: function (response) {
@@ -883,6 +1041,15 @@ function fireOrder(orderId) {
 
       modal.hide();
 
+      Swal.fire({
+        icon: "success",
+        title: "Order placed successfully",
+        text: "Your order is now pending approval.",
+        showConfirmButton: false,
+        timer: 2200,
+        timerProgressBar: true,
+      });
+
       $.ajax({
         type: "post",
         url: "profile/getOrderedOrders",
@@ -896,8 +1063,24 @@ function fireOrder(orderId) {
     },
 
     error: function (response) {
-      let errors = response.responseJSON.data;
-      showErrors(errors);
+      let errors = response.responseJSON?.data;
+
+      if (errors?.quantityBooks) {
+        Swal.fire({
+          icon: "error",
+          title: "Not enough stock",
+          text: errors.quantityBooks[0],
+        });
+        return;
+      }
+
+      Swal.fire({
+        icon: "error",
+        title: "Unable to place order",
+        text:
+          response.responseJSON?.message ||
+          "The order could not be placed. Please try again.",
+      });
     },
   });
 }
@@ -922,6 +1105,11 @@ function getDoneOrders(orderId) {
       data: { orderId: orderId },
 
       success: function (response) {
+        let stockUpdates = response.data?.stockUpdates || [];
+        stockUpdates.forEach(function (book) {
+          updateBookStock(book.bookId, book.stock);
+        });
+
         $(`tr[data-ordered-id="${orderId}"]`).remove();
 
         $.ajax({

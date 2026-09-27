@@ -50,6 +50,9 @@
                                     <h3 class='lable fw-bold w-100 text-center'> ... </h3>
                                 </div>
                             </div>
+                            <div class='btnCon mb-3 w-50'>
+                                <button class='btn btn-success m-auto d-block' data-bs-toggle='modal' data-bs-target = '#staticBackdrop7' onclick = 'openAddBook({$authorItem['id']} ,\"{$authorItem['name']}\" )'>Add Book</button>
+                            </div>
                         </div>
                     </div>
                 ";

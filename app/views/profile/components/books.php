@@ -21,7 +21,7 @@
                 ?>
 
                 <div class="col-lg-6 column">
-                    <div class="infoBox h-100">
+                    <div class="infoBox h-100 book" data-book-id="<?= $book['id'] ?>" data-stock="<?= $book['stock'] ?>">
 
                         <div class="imgCon">
                             <img src="<?= $bookImg ?>">
@@ -49,7 +49,84 @@
 
                             <div class="gender mb-2">
                                 <h3 class="lable fw-bold">Stock :</h3>
+                                <h3 class="info stock-info">
+                                    <?= $book['stock'] ?>
+                                </h3>
+                            </div>
+
+                        </div>
+                        <?php if (isAuth('customer')): ?>
+
+                            <div class="input-group mb-3">
+                                <button class="btn btn-outline-success" type="button" id="button-addon1" onclick="addToCart(<?= $book['id'] ?>,this)">
+                                    Add To Cart
+                                </button>
+
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    placeholder="Quantity"
+                                    min="1"
+                                    id="input-quantity-<?= $book['id'] ?>">
+                            </div>
+
+                        <?php endif; ?>
+
+                    </div>
+                </div>
+
+            <?php endforeach; ?>
+
+        <?php else: ?>
+
+            <p class="alert alert-danger">No books</p>
+
+        <?php endif; ?>
+
+    <?php endif; ?>
+
+    <?php if (isAuth('admin')): ?>
+
+        <?php if (!empty($books['data'])): ?>
+
+            <?php foreach ($books['data'] as $book): ?>
+
+                <?php
+                $bookImg = ($book['image'] == null)
+                    ? asset('imgs/uploads/book.png')
+                    : asset("imgs/uploads/{$book['image']}");
+                ?>
+
+                <div class="col-lg-6 column">
+                    <div class="infoBox h-100 book" data-book-id="<?= $book['id'] ?>" data-stock="<?= $book['stock'] ?>">
+
+                        <div class="imgCon">
+                            <img src="<?= $bookImg ?>">
+                        </div>
+
+                        <div class="nameCon mb-3">
+                            <h3><?= $book['title'] ?></h3>
+                        </div>
+
+                        <div class="infoCon mb-2">
+
+                            <div class="mail mb-2">
+                                <h3 class="lable fw-bold">Author :</h3>
                                 <h3 class="info">
+                                    <?= $book['author_name'] ?>
+                                </h3>
+                            </div>
+
+                            <div class="gender mb-2">
+                                <h3 class="lable fw-bold">Price :</h3>
+                                <h3 class="info">
+                                    <?= $book['price'] ?>
+                                </h3>
+                            </div>
+
+                            <div class="gender mb-2">
+                                <h3 class="lable fw-bold">Stock :</h3>
+                                <h3 class="info stock-info">
                                     <?= $book['stock'] ?>
                                 </h3>
                             </div>
@@ -90,7 +167,7 @@
 
 <?php
 
-if (isAuth('customer') && !empty($books['data'])) {
+if (!empty($books['data'])) {
 
     $prepareLi = "";
 

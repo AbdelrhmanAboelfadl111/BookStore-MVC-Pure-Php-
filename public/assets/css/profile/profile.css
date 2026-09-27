@@ -107,7 +107,23 @@ color: rgb(0, 0, 0);
 font-weight: 300;
 font-size: 20px;
 width: -webkit-fill-available;
+display: flex;
+justify-content: flex-start;
 }
+
+ .book .infoCon .mail h3.lable,
+ .book .infoCon .Bio h3.lable,
+ .book .infoCon .Password h3.lable,
+ .book .infoCon .gender h3.lable,
+ .book .infoCon .age h3.lable,
+ .book .infoCon .jop h3.lable {
+    font-weight: 300;
+    font-size: 20px;
+    width: fit-content!important;
+    display: flex;
+    justify-content: flex-start;
+}
+
 .informations .infoBox .infoCon .mail h3.lable{
     width: initial;
     
@@ -166,7 +182,7 @@ width: 100px;
 }
 
 .informations section.main .container .content h3 {
-font-size: 28px;
+font-size: 23px;
 }
 
 .column .infoBox img{
@@ -178,10 +194,9 @@ font-size: 28px;
     background: -webkit-linear-gradient(to right, #6FB1FC, #4364F7, #0052D4);
     background: linear-gradient(to right, #6FB1FC, #4364F7, #0052D4);
     color: white;
-    padding: 15px;
     border-radius: 50%;
-    width:40px;
-    height: 40px;
+    width:45px;
+    height: 45px;
     display: flex;
     justify-content: center;
     align-items: center;
