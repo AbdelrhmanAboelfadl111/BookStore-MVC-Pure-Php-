@@ -15,12 +15,13 @@ class CartController extends Controller
         if(!empty($errors)){
             Response::json_response($errors,"",422);
         }
-        CartModel::addToCart();
+        $added = CartModel::addToCart();
 
         $totalItems =CartModel::totalItemsIntoOrders();
 
         Response::json_response([
-            'totalItems' => $totalItems
+            'totalItems' => $totalItems,
+            'alreadyInCart' => !$added
         ]);
     }
 

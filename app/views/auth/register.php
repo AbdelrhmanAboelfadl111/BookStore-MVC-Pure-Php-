@@ -1,3 +1,7 @@
+<?php
+$oldRole = getOld('Role');
+$oldGender = getOld('Gender');
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -32,9 +36,9 @@
                                         <select name="Role" type="Role" id="RoleInput" class="form-control" placeholder="Role">
                                             <?php 
                                             if(isAuth('admin')){
-                                                echo "<option value='admin'>Admin</option>";
+                                                echo "<option value='admin' " . ($oldRole === 'admin' ? 'selected' : '') . ">Admin</option>";
                                             }else{
-                                                echo "<option value='customer'>Customer</option>";
+                                                echo "<option value='customer' " . ($oldRole === 'customer' ? 'selected' : '') . ">Customer</option>";
                                             }
                                             
                                             
@@ -45,7 +49,7 @@
                                         
                                         
                                         
-                                            <option value="" selected hidden>Role</option>
+                                            <option value="" <?= $oldRole === '' ? 'selected' : '' ?> hidden>Role</option>
                                             
                                         </select>
                                         <?= getErrors('Role') ?>
@@ -54,9 +58,9 @@
                                     <div class="mb-3 w-50">
                                         <label for="GenderInput" class="form-label">Gender</label>
                                         <select name="Gender" type="Gender" id="GenderInput" class="form-control" placeholder="Gender">
-                                            <option value="" selected hidden>Gender</option>
-                                            <option value="Male">Male</option>
-                                            <option value="Female">Female</option>
+                                            <option value="" <?= $oldGender === '' ? 'selected' : '' ?> hidden>Gender</option>
+                                            <option value="Male" <?= $oldGender === 'Male' ? 'selected' : '' ?>>Male</option>
+                                            <option value="Female" <?= $oldGender === 'Female' ? 'selected' : '' ?>>Female</option>
                                         </select>
                                         <?= getErrors('Gender') ?>
                                     </div>

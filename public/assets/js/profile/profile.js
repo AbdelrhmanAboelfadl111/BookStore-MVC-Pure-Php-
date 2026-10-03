@@ -62,7 +62,6 @@ $(document).on("click", ".pagination a:not(.pagination-link)", function (e) {
       $(`#${paginationTarget.tab}`).click();
     })
     .catch((error) => {
-      console.error(error);
       isError("error", "Unable to load this page");
     })
     .finally(() => {
@@ -91,6 +90,10 @@ function imgPath(imgName) {
   return window.location.origin + "/BookStore/public/assets/imgs/" + imgName;
 }
 
+// function imgPath(imgName) {
+//   return window.location.origin + "/assets/imgs/" + imgName;
+// }
+
 $("#AuthorForm").submit(function (e) {
   e.preventDefault();
 
@@ -100,7 +103,6 @@ $("#AuthorForm").submit(function (e) {
     url: "profile/AddAuthor",
     data: dataForm,
     success: function (response) {
-      console.log(response);
       $("#AuthorForm").get(0).reset();
       $(`#AuthorForm p.alert[data-error-name]`).addClass("d-none");
       $("#staticBackdrop6 .btn-close").click();
@@ -119,6 +121,9 @@ $("#AuthorForm").submit(function (e) {
                                     <h3 class='lable fw-bold'>BIO :</h3>
                                     <h3 class='info w-80'> ${response.data.bio.substr(0, 100)} ... </h3>
                                 </div>
+                            </div>
+                            <div class='btnCon mb-3 w-50'>
+                                <button class='btn btn-success m-auto d-block' data-bs-toggle='modal' data-bs-target = '#staticBackdrop7' onclick = 'openAddBook({$authorItem['id']} ,\"{$authorItem['name']}\" )'>Add Book</button>
                             </div>
                         </div>
                     </div>
@@ -167,11 +172,10 @@ $("#filterBook").on("submit", function (e) {
   let dataForm = $(this).serialize();
   $.ajax({
     type: "POST",
-    url: "/BookStore/public/profile/filterBooks",
+    url: "profile/filterBooks",
     data: dataForm,
     dataType: "json",
     success: function (response) {
-      console.log(response);
       let books = response.data.data;
       let currentPage = response.data.current_page;
       let total = response.data.total;
@@ -229,6 +233,7 @@ $("#filterBook").on("submit", function (e) {
                              
                             `);
         }
+        books.forEach((book) => updateBookStock(book.id, book.stock));
         $("#Books-tab-pane").append(preparePagination(response.data));
         $("#Books-tab-pane nav");
       } else {
@@ -236,11 +241,6 @@ $("#filterBook").on("submit", function (e) {
       }
     },
     error: function (response) {
-      console.error(
-        "Filter request failed:",
-        response.status,
-        response.responseText,
-      );
       isError("error", "Filter request failed");
     },
   });
@@ -331,14 +331,12 @@ $(document).on("click", ".pagination-link", function (e) {
 
   $.ajax({
     type: "POST",
-    url: "/BookStore/public/profile/filterBooks",
+    url: "profile/filterBooks",
     data: dataForm,
     processData: false,
     contentType: false,
 
     success: function (response) {
-      console.log(response);
-
       let books = response.data.data;
 
       $("#books").html("");
@@ -422,6 +420,7 @@ $(document).on("click", ".pagination-link", function (e) {
                 `);
         }
 
+        books.forEach((book) => updateBookStock(book.id, book.stock));
         $("#Books-tab-pane").append(preparePagination(response.data));
       } else {
         $("#books").append(`
@@ -432,16 +431,16 @@ $(document).on("click", ".pagination-link", function (e) {
       }
     },
 
-    error: function (response) {
-      console.log(response);
-    },
+    error: function (response) {},
   });
 });
 
 function openAddBook(authorId, authorName) {
   $("#AuthorIdInput").val(authorId);
 
-  $("#exampleInputName").val(authorId).find("option:selected").text(authorName);
+  $("#exampleInputName")
+    .empty()
+    .append(new Option(authorName, authorName, true, true));
 
   let modalElement = document.getElementById("staticBackdrop7");
 
@@ -459,7 +458,6 @@ $("#addBook").submit(function (e) {
     url: "profile/addBook",
     data: dataForm,
     success: function (response) {
-      console.log(response);
       let book = response.data;
       $("#addBook").get(0).reset();
       $(`#addBook p.alert[data-error-name]`).addClass("d-none");
@@ -577,6 +575,77 @@ function banUser(userId, text, event) {
   });
 }
 
+// function banUser(userId, text, event) {
+//   event?.preventDefault();
+//   event?.stopPropagation();
+
+//   let isBanAction = text === "Ban";
+//   let $button = $(event?.currentTarget);
+//   let $card = $button.closest(".infoBox");
+
+//   Swal.fire({
+//     title: "Are you sure?",
+//     text: "You won't be able to revert this!",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#3085d6",
+//     cancelButtonColor: "#d33",
+//     confirmButtonText: `Yes, ${text} it!`,
+//   }).then((result) => {
+//     if (result.isConfirmed) {
+//       let dataForm = {
+//         userId: userId,
+//       };
+//       $.ajax({
+//         type: "post",
+//         url: "/profile/banUser",
+//         data: dataForm,
+//         success: function (response) {
+//           if ($card.length) {
+//             let $badge = $card.find(".badge.text-bg-danger");
+//             let nextText = isBanAction ? "UnBan" : "Ban";
+
+//             $button
+//               .text(nextText)
+//               .removeClass("btn-danger btn-secondary")
+//               .addClass(isBanAction ? "btn-secondary" : "btn-danger")
+//               .attr("onclick", `banUser(${userId}, '${nextText}', event)`);
+
+//             if (isBanAction) {
+//               if (!$badge.length) {
+//                 $card.prepend(
+//                   "<span class='badge text-bg-danger position-absolute'>Baned</span>",
+//                 );
+//               }
+//             } else {
+//               $badge.remove();
+//             }
+//           }
+
+//           Swal.fire({
+//             icon: "success",
+//             title: `${isBanAction ? "Banned" : "Unbanned"} successfully`,
+//             showConfirmButton: false,
+//             timer: 900,
+//             timerProgressBar: true,
+//           });
+//         },
+//         error: function (response) {
+//           Swal.fire({
+//             icon: "error",
+//             title: "You do not have permission",
+//             text:
+//               response.status === 403
+//                 ? response.responseJSON?.message ||
+//                   "You do not have permission to ban this user."
+//                 : "The user was not banned.",
+//           });
+//         },
+//       });
+//     }
+//   });
+// }
+
 function setCartBadgeCount(totalItems) {
   let count = Number(totalItems) || 0;
   $("#countOfOrders").text(Math.max(0, count));
@@ -656,12 +725,35 @@ function addToCart(bookId, that) {
     url: "profile/AddToCart",
     data: dataForm,
     success: function (response) {
-      console.log(response);
+      if (response.data.alreadyInCart) {
+        Swal.fire({
+          icon: "info",
+          title: "Already in cart",
+          text: "This book is already in your cart.",
+        });
+        return;
+      }
+
       quantityInput.val("");
 
       let totalItems = response.data.totalItems;
 
       setCartBadgeCount(totalItems);
+
+      Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.onmouseenter = Swal.stopTimer;
+          toast.onmouseleave = Swal.resumeTimer;
+        },
+      }).fire({
+        icon: "success",
+        title: "Order Has Been Added To Cart",
+      });
     },
     error: function (response) {
       let errors = response.responseJSON?.data;
@@ -682,9 +774,9 @@ function addToCart(bookId, that) {
         return;
       }
       showErrors(errors || {});
+      quantityInput.val("");
     },
   });
-  console.log(bookId, that);
 }
 
 function getItemsIntoCart(orderId = null, status = "cart") {
@@ -755,8 +847,6 @@ function getItemsIntoCart(orderId = null, status = "cart") {
     },
 
     error: function (response) {
-      console.log("ERROR:", response);
-
       let errors = response.responseJSON?.data;
 
       if (errors) {
@@ -934,8 +1024,6 @@ function decreaseOrderItem(orderItem, btn) {
     data: dataForm,
 
     success: function (response) {
-      console.log(response);
-
       let bookId = response.data.orderItem.book_id;
 
       if (response.data.orderItem.quantity == 0) {
@@ -1056,9 +1144,7 @@ function fireOrder(orderId) {
         success: function (response) {
           $("#ordered").html(response);
         },
-        error: function (response) {
-          console.log(response);
-        },
+        error: function (response) {},
       });
     },
 
@@ -1118,9 +1204,7 @@ function getDoneOrders(orderId) {
           success: function (res) {
             $("#Done").html(res);
           },
-          error: function (res) {
-            console.log(res);
-          },
+          error: function (res) {},
         });
 
         Swal.mixin({
@@ -1140,7 +1224,20 @@ function getDoneOrders(orderId) {
       },
 
       error: function (response) {
-        console.log(response);
+        Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        }).fire({
+          icon: "error",
+          title: `${response.responseJSON.message}`,
+        });
       },
     });
   });
@@ -1166,8 +1263,6 @@ function cancelOrder() {
     data: data,
 
     success: function (response) {
-      console.log(response);
-
       if (response.data.error) {
         $("#cancelOrderForm .errorCon").html(`
                     <p class="alert alert-danger mt-2 mb-2">
@@ -1250,8 +1345,6 @@ function cancelOrder() {
       }
     },
 
-    error: function (response) {
-      console.log(response);
-    },
+    error: function (response) {},
   });
 }

@@ -102,6 +102,10 @@ class CartModel extends Model
         $bookId = Request::DataSpecific('bookId');
         $quantity = (int) Request::DataSpecific('quantityBooks');
 
+        if (self::getOrderItemId($pendingOrderId, $bookId) !== false) {
+            return false;
+        }
+
         $bookStock = (int) $DB->query(
             "SELECT stock FROM books WHERE id = {$bookId} LIMIT 1"
         )->fetchColumn();
@@ -120,71 +124,42 @@ class CartModel extends Model
             ], '', 422);
         }
 
-        $orderItemId = self::getOrderItemId(
-            $pendingOrderId,
-            $bookId
+        $unitPrice = $DB->query(
+            "SELECT price
+            FROM books
+            WHERE id = '{$bookId}'"
+        )->fetchColumn();
+
+        $stmt = $DB->prepare(
+            "INSERT INTO orders_items
+            (
+                order_id,
+                book_id,
+                quantity,
+                unit_price,
+                subtotal
+            )
+            VALUES
+            (
+                :order_id,
+                :book_id,
+                :quantity,
+                :unit_price,
+                :subtotal
+            )"
         );
 
-
-        if ($orderItemId === false) {
-
-            $unitPrice = $DB->query(
-                "SELECT price
-                FROM books
-                WHERE id = '{$bookId}'"
-            )->fetchColumn();
-
-
-            $stmt = $DB->prepare(
-                "INSERT INTO orders_items
-                (
-                    order_id,
-                    book_id,
-                    quantity,
-                    unit_price,
-                    subtotal
-                )
-                VALUES
-                (
-                    :order_id,
-                    :book_id,
-                    :quantity,
-                    :unit_price,
-                    :subtotal
-                )"
-            );
-
-
-            $stmt->execute([
-                'order_id'   => $pendingOrderId,
-                'book_id'    => $bookId,
-                'quantity'   => $quantity,
-                'unit_price' => $unitPrice,
-                'subtotal'   => $unitPrice * $quantity
-            ]);
-        } else {
-
-            $unitPrice = $DB->query(
-                "SELECT price
-                FROM books
-                WHERE id = '{$bookId}'"
-            )->fetchColumn();
-
-            $newSubTotal = $unitPrice * $quantity;
-
-
-            $DB->exec(
-                "UPDATE orders_items
-                SET
-                    quantity = quantity + {$quantity},
-                    unit_price = {$unitPrice},
-                    subtotal = subtotal + {$newSubTotal}
-                WHERE id = {$orderItemId}"
-            );
-        }
+        $stmt->execute([
+            'order_id'   => $pendingOrderId,
+            'book_id'    => $bookId,
+            'quantity'   => $quantity,
+            'unit_price' => $unitPrice,
+            'subtotal'   => $unitPrice * $quantity
+        ]);
 
 
         self::updateToTalPriceOfOrders($pendingOrderId);
+        return true;
     }
 
 
